@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  nginx:
+    image: nginx:stable
+    container_name: "nginx"
+    restart: on-failure
+    ports:
+      - 8001:81
+    volumes:
+      - ./:/var/www/html/woc
+      - ./docker/nginx/woc.conf:/etc/nginx/conf.d/woc.conf
+    networks:
+      - woc
+    depends_on:
+      - php
+  php:
+    build:
+      context: ./
+      dockerfile: docker/php/Dockerfile
+    restart: on-failure
+    networks:
+      - woc
+    container_name: "php-7.4"
+    volumes:
+      - './:/var/www/html/woc'
+    depends_on:
+      - postgres
+  postgres:
+      image: postgres:12.2-alpine
+      volumes:
+        - ./database/dump:/var/lib/postgresql/data
+      restart: on-failure
+      container_name: "postgres_woc"
+      environment:
+        POSTGRES_USER: ${DB_USERNAME}
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+        POSTGRES_DB: ${DB_DATABASE}
+      ports:
+        - 54321:5432
+
+networks:
+  woc:
+    driver: bridge
+
